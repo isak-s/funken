@@ -160,17 +160,59 @@ substitute (Pattern a) b = concatMap aux a
 -- Tries to match two lists. If they match, the result consists of the sublist
 -- bound to the wildcard in the pattern list.
 match :: Eq a => Pattern a -> [a] -> Maybe [a]
-{- TO BE WRITTEN -}
-match = undefined
 
--- Helper function to match
+match (Pattern []) [] = Just []
+match (Pattern []) _ = Nothing
+match (Pattern patt) [] =
+  if all (== Wildcard) patt then Just [] else Nothing
+
+-- No wildcard
+match (Pattern patt) xs
+  | Wildcard `notElem` patt =
+      if patt == map Item xs then Just [] else Nothing
+
+-- Starts with wildcard
+match (Pattern (Wildcard:ps)) xs =
+  case singleWildcardMatch (Pattern (Wildcard:ps)) xs of
+    Just res -> Just res
+    Nothing  -> longerWildcardMatch (Pattern (Wildcard:ps)) xs
+
+-- Starts with normal item
+match (Pattern (Item p : ps)) (x:xs)
+  | p ==  x   = match (Pattern ps) xs
+  | otherwise = Nothing
+
 singleWildcardMatch, longerWildcardMatch :: Eq a => Pattern a -> [a] -> Maybe [a]
 singleWildcardMatch (Pattern (Wildcard:ps)) (x:xs) =
   case match (Pattern ps) xs of
     Nothing -> Nothing
     Just _ -> Just [x]
-{- TO BE WRITTEN -}
-longerWildcardMatch = undefined
+
+longerWildcardMatch (Pattern (Wildcard:ps)) (x:xs) =
+  case match (Pattern (Wildcard:ps)) xs of
+    Nothing   -> Nothing
+    Just res  -> Just (x : res)
+
+-- >>> singleWildcardMatch (mkPattern '*' "*do") "bdo"
+-- Just "b"
+
+-- >>> singleWildcardMatch (mkPattern '*' "*do") "dobedo"
+-- Nothing
+-- >>> singleWildcardMatch (mkPattern '*' "*do") "bedobe"
+-- Nothing
+
+-- >>> match (mkPattern '*' "frodo") "gandalf"
+-- >>> match (mkPattern 'x' "2*x+3+x") "2*7+3"
+-- >>> match (mkPattern 'x' "abcd") "abcd"
+-- >>> match (mkPattern 2 [1,3..5]) [1,3..5]
+-- >>> match (mkPattern 'x' "2*x+3") "2*7+3"
+-- >>> match (mkPattern '*' "* and *") "you and me"
+-- Nothing
+-- Nothing
+-- Just ""
+-- Just []
+-- Just "7"
+-- Just "you"
 
 
 
