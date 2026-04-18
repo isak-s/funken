@@ -226,10 +226,18 @@ matchAndTransform transform pat = (mmap transform) . (match pat)
 
 -- Applying a single pattern
 transformationApply :: Eq a => ([a] -> [a]) -> [a] -> (Pattern a, Template a) -> Maybe [a]
-{- TO BE WRITTEN -}
-transformationApply = undefined
+transformationApply f s (patt, temp) = mmap (substitute temp) (matchAndTransform f patt s)
+-- mmap (substitute temp) (mmap f (match patt s))
 
 -- Applying a list of patterns until one succeeds
 transformationsApply :: Eq a => ([a] -> [a]) -> [(Pattern a, Template a)] -> [a] -> Maybe [a]
-{- TO BE WRITTEN -}
-transformationsApply = undefined
+transformationsApply f [] s = Nothing
+transformationsApply f ((patt, temp):xs) s
+  | isJust res = res
+  | otherwise  = transformationsApply f xs s
+  where res = transformationApply f s (patt, temp)
+
+frenchPresentation = (mkPattern '*' "My name is *", mkPattern '*' "Je m'appelle *")
+-- >>> transformationApply id "My name is Zacharias" frenchPresentation
+-- Just "Je m'appelle Zacharias"
+
