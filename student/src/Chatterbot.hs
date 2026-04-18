@@ -6,6 +6,8 @@ import Data.Maybe
 
 -- If you're not sure what this is, it's ok.
 import Control.Monad (mapM)
+import Control.Arrow (Arrow(first))
+import Data.Foldable (find)
 
 -- A pattern is a list of things
 -- Where we have either a value or a wildcard
@@ -60,8 +62,13 @@ rulesApply :: [(Pattern String, Template String)] -> Phrase -> Phrase
 rulesApply = undefined
 
 reflect :: Phrase -> Phrase
-{- TO BE WRITTEN -}
-reflect = undefined
+reflect = map swap
+  where
+    swap w = case find (\ref -> fst ref == w) reflections of
+      Just (_, replacement) -> replacement
+      Nothing -> w
+-- >>> reflect ["i", "am", "penis", "you"]
+-- ["you","are","penis","me"]
 
 reflections =
   [ ("am",     "are"),
@@ -240,4 +247,5 @@ transformationsApply f ((patt, temp):xs) s
 frenchPresentation = (mkPattern '*' "My name is *", mkPattern '*' "Je m'appelle *")
 -- >>> transformationApply id "My name is Zacharias" frenchPresentation
 -- Just "Je m'appelle Zacharias"
+
 
