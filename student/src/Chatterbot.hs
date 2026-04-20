@@ -8,6 +8,7 @@ import Data.Maybe
 import Control.Monad (mapM)
 import Control.Arrow (Arrow(first))
 import Data.Foldable (find)
+import Data.List.NonEmpty (prependList)
 
 -- A pattern is a list of things
 -- Where we have either a value or a wildcard
@@ -201,14 +202,10 @@ match (Pattern (Item p : ps)) (x:xs)
 
 singleWildcardMatch, longerWildcardMatch :: Eq a => Pattern a -> [a] -> Maybe [a]
 singleWildcardMatch (Pattern (Wildcard:ps)) (x:xs) =
-  case match (Pattern ps) xs of
-    Nothing -> Nothing
-    Just _ -> Just [x]
+  orElse (fmap (const [x]) (match (Pattern ps) xs)) Nothing
 
 longerWildcardMatch (Pattern (Wildcard:ps)) (x:xs) =
-  case match (Pattern (Wildcard:ps)) xs of
-    Nothing   -> Nothing
-    Just res  -> Just (x : res)
+  orElse (fmap (x:) (match (Pattern  (Wildcard:ps)) xs)) Nothing
 
 -------------------------------------------------------
 -- Applying patterns transformations
