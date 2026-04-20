@@ -1,4 +1,5 @@
 module Chatterbot where
+  
 import Utilities
 import System.Random
 import Data.Char
@@ -59,9 +60,12 @@ rulesApply :: [(Pattern String, Template String)] -> Phrase -> Phrase
 {- TO BE WRITTEN -}
 rulesApply = undefined
 
+-- >>> reflect ["i", "will", "never", "see", "my", "reflection", "in", "your", "eyes"]
+-- Prelude.undefined
+
 reflect :: Phrase -> Phrase
 {- TO BE WRITTEN -}
-reflect = undefined
+reflect = map (\t -> try (\x -> lookup x reflections) t) 
 
 reflections =
   [ ("am",     "are"),
@@ -154,7 +158,7 @@ substitute (Pattern a) b = concatMap aux a
     aux Wildcard = b
     aux (Item a) = [a]
 
---- >>> substitute (mkPattern 'x' "3*cos(x) + 4 - x") "5.37"
+-- >>> substitute (mkPattern 'x' "3*cos(x) + 4 - x") "5.37"
 -- "3*cos(5.37) + 4 - 5.37"
 
 -- Tries to match two lists. If they match, the result consists of the sublist
@@ -168,8 +172,8 @@ match (Pattern []) _ = Nothing
 match (Pattern patt) [] =
   if all (== Wildcard) patt then Just [] else Nothing
 
---- No wildcard in the pattern
---- >>> match (mkPattern 'x' "abcd") "abcd"
+-- No wildcard in the pattern
+-- >>> match (mkPattern 'x' "abcd") "abcd"
 -- Just ""
 match (Pattern patt) xs 
   |Wildcard `notElem` patt =
@@ -199,31 +203,31 @@ longerWildcardMatch (Pattern (Wildcard:ps)) (x:xs) =
     Just res  -> Just (x : res)
 
 -- >>> singleWildcardMatch (mkPattern '*' "*do") "bdo"
--- Just "b"
+
 
 -- >>> singleWildcardMatch (mkPattern '*' "*do") "dobedo"
--- Nothing
+
 
 -- >>> singleWildcardMatch (mkPattern '*' "*do") "bedobe"
--- Nothing
 
---- >>> longerWildcardMatch (mkPattern '*' "*do") "bdo"
--- Nothing
 
---- >>> longerWildcardMatch (mkPattern '*' "*do") "dobedo"
+-- >>> longerWildcardMatch (mkPattern '*' "*do") "bdo"
+
+
+-- >>> longerWildcardMatch (mkPattern '*' "*do") "dobedo"
 -- Just "dobe"
 
---- >>> longerWildcardMatch (mkPattern '*' "*do") "bedobe"
--- Nothing
+-- >>> longerWildcardMatch (mkPattern '*' "*do") "bedobe"
 
---- >>> match (mkPattern '*' "*do")"bdo"
--- Just "b"
 
---- >>> match (mkPattern '*' "*do")"dobedo"
--- Just "dobe"
+-- >>> match (mkPattern '*' "*do")"bdo"
 
---- >>> match (mkPattern '*' "*do")"bedobe"
--- Nothing
+
+-- >>> match (mkPattern '*' "*do")"dobedo"
+
+
+-- >>> match (mkPattern '*' "*do")"bedobe"
+
 
 
 
@@ -243,12 +247,20 @@ longerWildcardMatch (Pattern (Wildcard:ps)) (x:xs) =
 matchAndTransform :: Eq a => ([a] -> [a]) -> Pattern a -> [a] -> Maybe [a]
 matchAndTransform transform pat = (mmap transform) . (match pat)
 
+
+-- >>> transformationApply id "My name is Zacharias" (mkPattern '*' "My name is *", mkPattern '*' "Je m'appelle *") 
+-- Just "Je m'appelle Zacharias"
+
 -- Applying a single pattern
 transformationApply :: Eq a => ([a] -> [a]) -> [a] -> (Pattern a, Template a) -> Maybe [a]
 {- TO BE WRITTEN -}
-transformationApply = undefined
+transformationApply f xs (patt, temp) = mmap (substitute temp) (matchAndTransform f patt xs) 
 
 -- Applying a list of patterns until one succeeds
 transformationsApply :: Eq a => ([a] -> [a]) -> [(Pattern a, Template a)] -> [a] -> Maybe [a]
 {- TO BE WRITTEN -}
-transformationsApply = undefined
+transformationsApply f [] xs = Nothing
+transformationsApply f (ps:listPatt) xs = 
+  case transformationApply f xs ps of
+    Nothing -> transformationsApply f listPatt xs 
+    Just x -> Just x 
