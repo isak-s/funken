@@ -56,10 +56,13 @@ stateOfMind b =
 makePair :: Rule -> IO (Pattern String, Template String)
 {- TO BE WRITTEN -}
 makePair = undefined
-
+-- transformationsApply :: Eq a => ([a] -> [a]) -> [(Pattern a, Template a)] -> [a] -> Maybe [a]
 rulesApply :: [(Pattern String, Template String)] -> Phrase -> Phrase
-{- TO BE WRITTEN -}
-rulesApply = undefined
+rulesApply l = try $ transformationsApply reflect l
+
+testRulesApply = (stringToPattern "*" "changed *", stringToPattern "*" "It did in fact change *")
+-- >>> rulesApply [testRulesApply] (words "changed you")
+-- ["It","did","in","fact","change","me"]
 
 reflect :: Phrase -> Phrase
 reflect = map swap
@@ -200,29 +203,6 @@ longerWildcardMatch (Pattern (Wildcard:ps)) (x:xs) =
     Nothing   -> Nothing
     Just res  -> Just (x : res)
 
--- >>> singleWildcardMatch (mkPattern '*' "*do") "bdo"
--- Just "b"
-
--- >>> singleWildcardMatch (mkPattern '*' "*do") "dobedo"
--- Nothing
--- >>> singleWildcardMatch (mkPattern '*' "*do") "bedobe"
--- Nothing
-
--- >>> match (mkPattern '*' "frodo") "gandalf"
--- >>> match (mkPattern 'x' "2*x+3+x") "2*7+3"
--- >>> match (mkPattern 'x' "abcd") "abcd"
--- >>> match (mkPattern 2 [1,3..5]) [1,3..5]
--- >>> match (mkPattern 'x' "2*x+3") "2*7+3"
--- >>> match (mkPattern '*' "* and *") "you and me"
--- Nothing
--- Nothing
--- Just ""
--- Just []
--- Just "7"
--- Just "you"
-
-
-
 -------------------------------------------------------
 -- Applying patterns transformations
 --------------------------------------------------------
@@ -243,9 +223,3 @@ transformationsApply f ((patt, temp):xs) s
   | isJust res = res
   | otherwise  = transformationsApply f xs s
   where res = transformationApply f s (patt, temp)
-
-frenchPresentation = (mkPattern '*' "My name is *", mkPattern '*' "Je m'appelle *")
--- >>> transformationApply id "My name is Zacharias" frenchPresentation
--- Just "Je m'appelle Zacharias"
-
-
