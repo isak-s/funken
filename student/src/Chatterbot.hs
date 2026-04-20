@@ -149,11 +149,17 @@ reductions = (map . map2) (starPattern, starPattern)
 
 reduce :: Phrase -> Phrase
 reduce = reductionsApply reductions
-
+-- transformationsApply :: Eq a => ([a] -> [a]) -> [(Pattern a, Template a)] -> [a] -> Maybe [a]
 reductionsApply :: [(Pattern String, Pattern String)] -> Phrase -> Phrase
-{- TO BE WRITTEN -}
-reductionsApply = undefined
+reductionsApply redions p
+  | p == reducedP = p
+  | otherwise = reductionsApply redions reducedP
+  where Just reducedP = orElse (transformationsApply id redions p) (Just p)
 
+-- map over reductions and create a contains function for each
+
+-- >>> reduce (prepare "can you please tell me what Haskell is")
+-- ["what","is","haskell"]
 
 -------------------------------------------------------
 -- Match and substitute
