@@ -111,7 +111,7 @@ rulesCompile :: [(String, [String])] -> BotBrain
 rulesCompile = map ruleCompile
 
 ruleCompile :: (String, [String]) -> Rule
-ruleCompile (patt, temps) = Rule (starPattern patt, map starPattern temps)
+ruleCompile (patt, temps) = Rule (starPattern (map toLower patt), map starPattern temps)
 
 --------------------------------------
 
@@ -120,7 +120,6 @@ ruleCompile (patt, temps) = Rule (starPattern patt, map starPattern temps)
 -- If we choose one element that represents the wildcard
 -- mkPattern '*' "Hi *!" => [Item 'H', Item 'i', Wildcard, Item '!']
 mkPattern :: Eq a => a -> [a] -> Pattern a
-{- TO BE WRITTEN -}
 mkPattern a = Pattern . map (\t -> if t == a then Wildcard else Item t)
 
 -- >>> mkPattern '*' "Hi *!"
