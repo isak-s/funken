@@ -178,22 +178,17 @@ substitute (Pattern a) b = concatMap aux a
 -- Tries to match two lists. If they match, the result consists of the sublist
 -- bound to the wildcard in the pattern list.
 match :: Eq a => Pattern a -> [a] -> Maybe [a]
-
-match (Pattern []) [] = Just []
-match (Pattern []) _ = Nothing
-match (Pattern patt) [] =
-  if all (== Wildcard) patt then Just [] else Nothing
-
+-- empty list, empty pattern or only wildcards. Needed for if a string ends in a wildcard
+match (Pattern patt) [] = if all (== Wildcard) patt then Just [] else Nothing
 -- No wildcard
 match (Pattern patt) xs
   | Wildcard `notElem` patt =
       if patt == map Item xs then Just [] else Nothing
 
 -- Starts with wildcard
-match (Pattern (Wildcard:ps)) xs =
-  case singleWildcardMatch (Pattern (Wildcard:ps)) xs of
-    Just res -> Just res
-    Nothing  -> longerWildcardMatch (Pattern (Wildcard:ps)) xs
+match (Pattern (Wildcard:ps)) xs = orElse
+  (singleWildcardMatch (Pattern (Wildcard:ps)) xs)
+  (longerWildcardMatch (Pattern (Wildcard:ps)) xs)
 
 -- Starts with normal item
 match (Pattern (Item p : ps)) (x:xs)
@@ -202,10 +197,9 @@ match (Pattern (Item p : ps)) (x:xs)
 
 singleWildcardMatch, longerWildcardMatch :: Eq a => Pattern a -> [a] -> Maybe [a]
 singleWildcardMatch (Pattern (Wildcard:ps)) (x:xs) =
-  orElse (fmap (const [x]) (match (Pattern ps) xs)) Nothing
-
+  mmap (const [x]) (match (Pattern ps) xs)
 longerWildcardMatch (Pattern (Wildcard:ps)) (x:xs) =
-  orElse (fmap (x:) (match (Pattern  (Wildcard:ps)) xs)) Nothing
+  mmap (x:) (match (Pattern  (Wildcard:ps)) xs)
 
 -------------------------------------------------------
 -- Applying patterns transformations
