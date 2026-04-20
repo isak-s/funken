@@ -108,8 +108,7 @@ rulesCompile :: [(String, [String])] -> BotBrain
 rulesCompile = map ruleCompile
 
 ruleCompile :: (String, [String]) -> Rule
-{- TO BE WRITTEN -}
-ruleCompile = undefined
+ruleCompile (patt, temps) = Rule (starPattern patt, map starPattern temps)
 
 --------------------------------------
 
