@@ -1,3 +1,5 @@
+-- Erik Åstrand(er8863as-s) Isak Simonsson(is1746si-s)
+
 module Chatterbot where
   
 import Utilities
@@ -55,12 +57,12 @@ stateOfMind b =
 makePair :: Rule -> IO (Pattern String, Template String)
 {- TO BE WRITTEN -}
 makePair (Rule (patt, temp) ) = do
-  r <- randomIO ::  IO Float
-  return (patt, pick r temp)
+  rand <- randomIO ::  IO Float
+  return (patt, pick rand temp)
 
 rulesApply :: [(Pattern String, Template String)] -> Phrase -> Phrase
 {- TO BE WRITTEN -}
-rulesApply patt = try (transformationsApply reflect patt) 
+rulesApply list = try $ transformationsApply reflect list
 
 -- >>> rulesApply [(stringToPattern "*" "I hate *", stringToPattern "*" "Why do you hate * ?")] (words "I hate my mother") 
 -- ["Why","do","you","hate","your","mother","?"]
@@ -71,7 +73,7 @@ rulesApply patt = try (transformationsApply reflect patt)
 
 reflect :: Phrase -> Phrase
 {- TO BE WRITTEN -}
-reflect = map (try (`lookup` reflections))
+reflect = map (try (`lookup` reflections)) 
 -- map (\t -> try (\x -> lookup x reflections) t)  
 
 reflections =
@@ -151,7 +153,7 @@ reduce = reductionsApply reductions
 
 reductionsApply :: [(Pattern String, Pattern String)] -> Phrase -> Phrase
 {- TO BE WRITTEN -}
-reductionsApply pat = fix (try (transformationsApply id pat))
+reductionsApply pat = fix (try (transformationsApply id pat)) 
 
 -- >>> prepare "can you please tell me what Haskell is"
 -- ["what","is","haskell"]
@@ -175,41 +177,34 @@ substitute (Pattern a) b = concatMap aux a
 match :: Eq a => Pattern a -> [a] -> Maybe [a]
 {- TO BE WRITTEN -}
 
---- All foundational possiblites
-match (Pattern []) [] = Just []
-match (Pattern []) _ = Nothing
-match (Pattern patt) [] =
-  if all (== Wildcard) patt then Just [] else Nothing
 
--- No wildcard in the pattern
+-- empty list, empty pattern or only wildcards. Needed for if a string ends in a wildcard
+match (Pattern patt) [] = if all (== Wildcard) patt then Just [] else Nothing
+
+
 -- >>> match (mkPattern 'x' "abcd") "abcd"
 -- Just ""
+
+-- No wildcard in the pattern
 match (Pattern patt) xs 
   |Wildcard `notElem` patt =
     if patt == map Item xs then Just [] else Nothing
 
---- If the first is a Wildcard
-match (Pattern (Wildcard:ps)) xs = 
-  case singleWildcardMatch(Pattern (Wildcard:ps)) xs of
-    Just res -> Just res
-    Nothing -> longerWildcardMatch (Pattern (Wildcard:ps)) xs
+-- Starts with wildcard
+match (Pattern (Wildcard:ps)) xs = orElse
+  (singleWildcardMatch (Pattern (Wildcard:ps)) xs)
+  (longerWildcardMatch (Pattern (Wildcard:ps)) xs)
 
 -- Starts with normal item
 match (Pattern (Item p : ps)) (x:xs)
   | p ==  x   = match (Pattern ps) xs
   | otherwise = Nothing
 
--- Helper function to match
 singleWildcardMatch, longerWildcardMatch :: Eq a => Pattern a -> [a] -> Maybe [a]
 singleWildcardMatch (Pattern (Wildcard:ps)) (x:xs) =
-  case match (Pattern ps) xs of
-    Nothing -> Nothing
-    Just _ -> Just [x]
-{- TO BE WRITTEN -}
+  mmap (const [x]) (match (Pattern ps) xs)
 longerWildcardMatch (Pattern (Wildcard:ps)) (x:xs) =
-  case match (Pattern (Wildcard:ps)) xs of
-    Nothing   -> Nothing
-    Just res  -> Just (x : res)
+  mmap (x:) (match (Pattern  (Wildcard:ps)) xs)
 
 -- >>> singleWildcardMatch (mkPattern '*' "*do") "bdo"
 
@@ -269,7 +264,5 @@ transformationApply f xs (patt, temp) = mmap (substitute temp) (matchAndTransfor
 transformationsApply :: Eq a => ([a] -> [a]) -> [(Pattern a, Template a)] -> [a] -> Maybe [a]
 {- TO BE WRITTEN -}
 transformationsApply f [] xs = Nothing
-transformationsApply f (ps:listPatt) xs = 
-  case transformationApply f xs ps of
-    Nothing -> transformationsApply f listPatt xs 
-    Just x -> Just x 
+transformationsApply f (ps:listPatt) xs = orElse (transformationApply f xs ps) (transformationsApply f listPatt xs)
+  
