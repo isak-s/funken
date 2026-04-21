@@ -54,18 +54,25 @@ stateOfMind b =
 -- at random, and that's our bot
 makePair :: Rule -> IO (Pattern String, Template String)
 {- TO BE WRITTEN -}
-makePair = undefined
+makePair (Rule (patt, temp) ) = do
+  r <- randomIO ::  IO Float
+  return (patt, pick r temp)
 
 rulesApply :: [(Pattern String, Template String)] -> Phrase -> Phrase
 {- TO BE WRITTEN -}
-rulesApply = undefined
+rulesApply patt = try (transformationsApply reflect patt) 
+
+-- >>> rulesApply [(stringToPattern "*" "I hate *", stringToPattern "*" "Why do you hate * ?")] (words "I hate my mother") 
+-- ["Why","do","you","hate","your","mother","?"]
+
 
 -- >>> reflect ["i", "will", "never", "see", "my", "reflection", "in", "your", "eyes"]
--- Prelude.undefined
+-- ["you","will","never","see","your","reflection","in","my","eyes"]
 
 reflect :: Phrase -> Phrase
 {- TO BE WRITTEN -}
-reflect = map (\t -> try (\x -> lookup x reflections) t) 
+reflect = map (try (`lookup` reflections))
+-- map (\t -> try (\x -> lookup x reflections) t)  
 
 reflections =
   [ ("am",     "are"),
@@ -103,7 +110,7 @@ rulesCompile = map ruleCompile
 
 ruleCompile :: (String, [String]) -> Rule
 {- TO BE WRITTEN -}
-ruleCompile = undefined
+ruleCompile (patt, temp) =  Rule ( starPattern (map toLower patt), map starPattern temp)   
 
 --------------------------------------
 
@@ -144,8 +151,10 @@ reduce = reductionsApply reductions
 
 reductionsApply :: [(Pattern String, Pattern String)] -> Phrase -> Phrase
 {- TO BE WRITTEN -}
-reductionsApply = undefined
+reductionsApply pat = fix (try (transformationsApply id pat))
 
+-- >>> prepare "can you please tell me what Haskell is"
+-- ["what","is","haskell"]
 
 -------------------------------------------------------
 -- Match and substitute
