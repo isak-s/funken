@@ -8,8 +8,9 @@ import Data.Maybe (fromJust)
 -- The problem
 -- If we write a recursive function, it may be slow
 fibo :: Int -> Int
-{- TO BE WRITTEN -}
-fibo = undefined
+fibo 0 = 0
+fibo 1 = 1
+fibo n = fibo (n-1) + fibo (n-2)
 
 -- In GHCI, do,
 -- > :set +s
@@ -56,27 +57,40 @@ runFast = fastFibo1 30
 -- We can make another cache, that works with keys and values
 -- We pass the function and the domain of the keys as an argument
 listCache :: [a] -> (a -> b) -> [(a, b)]
-{- TO BE WRITTEN -}
-listCache domain f = undefined
+listCache domain f = map (\a -> (a, f a)) domain
 
 -- We create a function which looks up the
 -- result in the cache
 -- and use fromJust to get an error if the cache misses.
 listLookup :: Eq a => [(a, b)] -> a -> b
 {- TO BE WRITTEN -}
-listLookup cache value = undefined
+listLookup cache value = fromJust $ lookup value cache
 
 -- Create the cache for all integers...
 -- We use a 'fast fibonacci function' even if we haven't defined it yet!
 fibCache :: [(Int, Int)]
 {- TO BE WRITTEN -}
-fibCache = undefined
+fibCache = listCache [0..] fastFibo2
 
 -- And the fast function looks in the cache!
 fastFibo2 :: Int -> Int
-{- TO BE WRITTEN -}
-fastFibo2 n = undefined
+fastFibo2 n = fromJust $ lookup n fibCache
+-- the first time we run it, the cache is empty, and in the first test we use
+-- the old fibo function, therefore this should be slower since we also store
+-- and look stuff up. If we run it on the same input again it is a lot faster.
+-- even faster once we use fastFibo to generate the cache as well.
+-- ghci> fastFibo2 20
+-- 6765
+-- (0.02 secs, 4,552,328 bytes)
+-- ghci> fibo 20
+-- 6765
+-- (0.01 secs, 4,542,760 bytes)
+-- ghci> fastFibo2 20
+-- 6765
+-- (0.00 secs, 515,080 bytes)
 
+memoizeList :: Eq a => [a] -> (a -> b) -> (a -> b)
+memoizeList domain = listLookup.listCache domain
 -- Pause:
 -- We make the solution in two parts:
 -- 1. We have a cache that uses a 'fast function' we don't have yet (but we know it's type!)
@@ -113,7 +127,9 @@ testMemoize n =
 -- And it's easy to implement fibonacci again: (openFib fibo) does that.
 openFib :: (Int -> Int) -> Int -> Int
 {- TO BE WRITTEN -}
-openFib f n = undefined
+openFib _ 0 = 0
+openFib _ 1 = 1
+openFib f n = f (n-1) + f (n-2)
 
 -- We use openFib to create a cached function, and make sure
 -- The recursive calls call the fast version!
