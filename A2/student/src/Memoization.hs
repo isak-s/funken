@@ -148,7 +148,17 @@ dropLast l = take (length l - 1) l
 
 -- Slow version
 lps :: String -> String
-lps s = undefined
+lps s
+  | length s <= 1 = s
+  | otherwise = if head s == last s then head s : lps (dropLast (tail s)) ++ [last s]
+  else if length a > length b then a else b
+    where
+      a = lps (dropLast s)
+      b = lps (tail s)
+
+-- >>> lps "sesbaese"
+-- "esese"
+
 
 -- CACHES FOR LISTS OF THINGS
 
@@ -165,21 +175,38 @@ data Trie node edge = Trie node [(edge, Trie node edge)]
 
 -- First, looking for a list in a trie...
 trieLookup :: Eq e => Trie a e -> [e] -> a
-{- TO BE WRITTEN -}
-trieLookup t l = undefined
+-- empty list at current node -> return node
+trieLookup (Trie a _) [] = a
+trieLookup (Trie _ e) l = trieLookup (fromJust (lookup (head l) e)) (tail l)
 
--- Get a subset of a trie, with limited depth
--- (Provided: Useful for debugging)
+-- get edges for a
+-- take the edge that matches the next item in the list
+-- recurse on that
+hiho :: Trie Integer Char
+hiho = Trie 0 [
+   ('h', Trie 1 [('i', Trie 2 []),
+                 ('o', Trie 2 [('o', Trie 3 [])])])
+   ]
+-- >>> trieLookup hiho "hoo"
+-- 3
+-- >>> trieLookup hiho "hi"
+-- 2
+
 limitTrie :: Int -> Trie n e -> Trie n e
 limitTrie 0 (Trie v _) = Trie v []
-limitTrie n (Trie v edges) =
-  Trie v [(l, limitTrie (n-1) t) | (l, t) <- edges]
+limitTrie n (Trie v es) =
+  Trie v [(l, limitTrie (n-1) t) | (l, t) <- es]
 
 -- Map a function over all values in the trie
 -- Edge labels stay the same.
+-- example of open recursion. We recurse with a function provided upon call.
+-- apply the function to the value at the current node, and create a new trie with that
+-- add all edges, and perform maptrie on those tries recursively
 mapTrie :: (a -> b) -> Trie a e -> Trie b e
-{- TO BE WRITTEN -}
-mapTrie f (Trie v cs) = undefined
+mapTrie f (Trie v cs) = Trie (f v) (map (\(e, t) -> (e, mapTrie f t)) cs)
+
+-- >>> mapTrie (\a -> a+2) hiho
+-- Trie 2 [('h',Trie 3 [('i',Trie 4 []),('o',Trie 4 [('o',Trie 5 [])])])]
 
 -- To build an infinite trie, we start from the root
 -- The root starts with the empty list...
@@ -187,7 +214,7 @@ mapTrie f (Trie v cs) = undefined
 -- The domain 'dom' defines how many edges we have per node
 rootTrie :: [a] -> Trie [a] a
 {- TO BE WRITTEN -}
-rootTrie domain = undefined
+rootTrie domain = Trie [] (edges domain [])
 
 -- How do we create the edges?
 -- We look at the domain,
@@ -197,8 +224,7 @@ rootTrie domain = undefined
 -- the domain, the current label
 -- and the current node
 edges :: [a] -> [a] -> [(a, Trie [a] a)]
-{- TO BE WRITTEN -}
-edges domain currentNode = undefined
+edges domain currentNode = map (\e -> (e, subtree domain e currentNode)) domain
 
 -- How do we build the subtree?
 -- We use the label we just followed
@@ -207,16 +233,15 @@ edges domain currentNode = undefined
 -- (using the edges function)
 subtree :: [a] -> a -> [a] -> Trie [a] a
 {- TO BE WRITTEN -}
-subtree domain label parent =
-  undefined
+subtree domain label parent = Trie curr (edges domain curr)
+  where curr = parent ++ [label]
 
 -- Important: the trie is infinite because edges calls subtree, and subtree calls edges.
 
 -- trieCache builds a cache for a function
 -- provided with a domain (for the list elements)
 trieCache :: [e] -> ([e] -> b) -> Trie b e
-{- TO BE WRITTEN -}
-trieCache domain function = undefined
+trieCache domain function = mapTrie function (rootTrie domain)
 
 {--
 You can inspect the cache with GHCI!
@@ -242,6 +267,7 @@ And then, you can do
 Prints the cache, and you should be able to see it has grown
 --}
 
+testTrie :: [Char] -> [Char]
 testTrie =
   let cache = mapTrie reverse $ rootTrie ['a'..'z']
   in trieLookup cache
@@ -254,20 +280,71 @@ testTrie =
 -- (Is slow)
 
 -- First, some test strings
+k1 :: String
 k1 = "writers"
+k2 :: String
 k2 = "vintner"
+l1 :: String
 l1 = "aferociousmonadatemyhamster"
+l2 :: String
 l2 = "functionalprogrammingrules"
+s1 :: String
 s1 = "bananrepubliksinvasionsarmestabsadjutant"
+s2 :: String
 s2 = "kontrabasfiolfodralmakarmästarlärling"
 
+-- >>> (fastLPS s2)
+-- Maybe.fromJust: Nothing
+
+
+
+-- openLPS :: (String -> String) -> (String -> String)
+-- openLPS sf = undefined -- look at 'lps' for inspiration
+
+psTrieCache :: Trie String Char
+psTrieCache = trieCache ['a'..'z'] fastLPS
+-- use trieLookup to find the Node in the trie
+-- each node is represented with a string, with the root node being an empty string
+-- each edge is the character that comes next in the string.
+-- We should therefore in openLPS, when we are at a node, if the first and last are the same char, (palindromic)
+  -- we find lps of the substring without first and last
+--   fastLPS is involved somehow to get the results of the trimmed strings
+--   When we reach palindromes or empty lists for all, we compare lengths to
+--     get theLPS
+
+
 openLPS :: (String -> String) -> (String -> String)
-openLPS s = undefined -- look at 'lps' for inspiration
+openLPS flps s
+  | length s <= 1 = s
+  | otherwise = if head s == last s then head s : flps (dropLast (tail s)) ++ [last s]
+  else if length a > length b then a else b
+      where
+        a = flps (dropLast s)
+        b = flps (tail s)
+
+
+-- creates a function that uses open recursion. Applies the function sf at each
+-- step, and recurses itself
+-- should recurse to all edges in the trie from the current node
+-- then compare lengths when done. Longest is the one returned
+
+-- lps :: String -> String
+-- lps s
+  -- | length s <= 1 = s
+  -- | otherwise = if head s == last s then head s : lps (dropLast (tail s)) ++ [last s]
+  -- else if length a > length b then a else b
+    -- where
+      -- a = lps (dropLast s)
+      -- b = lps (tail s)
+
+
 
 -- Fast!
 fastLPS :: String -> String
-fastLPS s =
-  undefined
+fastLPS = openLPS $ trieLookup psTrieCache
+
+-- >>> fastLPS "arstoien"
+-- "n"
 
 -- So, what were the tricks?
 -- The first one is to build an infinite data-structure, to memoize the function
