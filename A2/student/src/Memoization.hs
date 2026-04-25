@@ -83,6 +83,8 @@ dropLast :: [a] -> [a]
 dropLast l = take (length l - 1) l
 
 -- Slow version
+
+{- Wrote this version first, and then refactored to the one below
 lps :: String -> String
 lps s
   | length s <= 1 = s
@@ -91,19 +93,22 @@ lps s
     where
       a = lps (dropLast s)
       b = lps (tail s)
-{-
+-}
+
 lps :: String -> String
 lps [] = []
 lps [a] = [a]
-lps (x:xs:x) = x : lps xs ++ [x]
-lps 
-  | length s <= 1 = s
-  | otherwise = if head s == last s then head s : lps (dropLast (tail s)) ++ [last s]
-  else if length a > length b then a else b
+lps (x:xs)
+  | x == lx = x : lps dlxs ++ [lx]
+  | length r1 > length r2 = r1
+  | otherwise = r2
     where
-      a = lps (dropLast s)
-      b = lps (tail s)
--}
+      dlxs = dropLast xs
+      lx = last xs
+      r1 = lps (x:dlxs)
+      r2 = lps xs
+
+
 
 -- >>> lps "sesbaese"
 -- "esese"
@@ -201,7 +206,7 @@ psTrieCache = trieCache (['a'..'z'] ++ ['å', 'ä', 'ö']) fastLPS
 --   When we reach palindromes or empty lists for all, we compare lengths to
 --     get theLPS
 
-
+{- Wrote this version first, and then refactored to the one below
 openLPS :: (String -> String) -> (String -> String)
 openLPS flps s
   | length s <= 1 = s
@@ -210,6 +215,19 @@ openLPS flps s
       where
         a = flps (dropLast s)
         b = flps (tail s)
+-}
+openLPS :: (String -> String) -> (String -> String)
+openLPS _ [] = []
+openLPS _ [a] = [a]
+openLPS flps (x:xs)
+  | x == lx = x : flps dlxs ++ [lx]
+  | length r1 > length r2 = r1
+  | otherwise = r2
+    where
+      dlxs = dropLast xs
+      lx = last xs
+      r1 = flps (x:dlxs)
+      r2 = flps xs
 
 fastLPS :: String -> String
 fastLPS = openLPS $ trieLookup psTrieCache
