@@ -92,7 +92,7 @@ benchmark memoization-benchmarks
   build-depends:
       base >=4.7 && <5
     , containers
-    , criterion >=1.6
+    , criterion ==1.5.*
     , memoization
     , mtl
     , random >=1.1

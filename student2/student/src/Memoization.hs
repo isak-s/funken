@@ -5,6 +5,8 @@ module Memoization where
 
 import Data.Maybe (fromJust)
 import Debug.Trace (trace)
+import Data.List (maximumBy)
+import Data.Ord (comparing)
 
 
 
@@ -81,8 +83,9 @@ fibCache = listCache [0..] fastFibo2
 -- And the fast function looks in the cache!
 fastFibo2 :: Int -> Int
 {- TO BE WRITTEN -}
-fastFibo2 = listLookup fibCache 
-
+fastFibo2 0 = 0
+fastFibo2 1 = 1
+fastFibo2 n = listLookup fibCache (n-1) + listLookup fibCache (n-2)
 -- Pause:
 -- We make the solution in two parts:
 -- 1. We have a cache that uses a 'fast function' we don't have yet (but we know it's type!)
@@ -140,10 +143,19 @@ dropLast l = take (length l - 1) l
 -- Slow version
 lps :: String -> String
 lps [] = ""
-lps [x] = x
-lps xs = 
-  | head xs == last xs = head xs ++ (lps (droplast (drop 1 xs))) ++ last xs
-  | otherwise = maximumBy (comparing length) [lps (dropLast xs),lps ( drop 1 xs)]
+lps [x] = [x]
+lps xs 
+  | head xs == last xs = [head xs] ++ lps (drop 1 (dropLast xs)) ++ [last xs]
+  | otherwise = maximumBy (comparing length) [lps (dropLast xs),lps (drop 1 xs)]
+
+-- >>> lps "kayak"
+-- "kayak"
+-- >>> lps "wr****iters"
+-- "r****r"
+
+-- >>> lps "aferociousmonadatemyhamster"
+-- "rsmahamsr"
+
 
 
 -- CACHES FOR LISTS OF THINGS
@@ -162,8 +174,8 @@ data Trie node edge = Trie node [(edge, Trie node edge)]
 -- First, looking for a list in a trie...
 trieLookup :: Eq e => Trie a e -> [e] -> a
 {- TO BE WRITTEN -}
-trieLookup (Trie a e) [] = a  
-trieLookup Trie [x:xs] = trieLookup Trie xs 
+trieLookup (Trie a _) [] = a  
+trieLookup (Trie _ e) (x:xs) = trieLookup (fromJust (lookup x e)) xs  
 
 -- Get a subset of a trie, with limited depth
 -- (Provided: Useful for debugging)
@@ -176,7 +188,8 @@ limitTrie n (Trie v edges) =
 -- Edge labels stay the same.
 mapTrie :: (a -> b) -> Trie a e -> Trie b e
 {- TO BE WRITTEN -}
-mapTrie f (Trie v cs) = undefined
+mapTrie f (Trie a []) = Trie (f a) [] 
+mapTrie f (Trie a cs) = Trie (f a) (map (\(e, t) -> (e, mapTrie f t)) cs)
 
 -- To build an infinite trie, we start from the root
 -- The root starts with the empty list...
@@ -184,7 +197,7 @@ mapTrie f (Trie v cs) = undefined
 -- The domain 'dom' defines how many edges we have per node
 rootTrie :: [a] -> Trie [a] a
 {- TO BE WRITTEN -}
-rootTrie domain = undefined
+rootTrie domain = Trie [] (edges domain [])
 
 -- How do we create the edges?
 -- We look at the domain,
@@ -195,7 +208,7 @@ rootTrie domain = undefined
 -- and the current node
 edges :: [a] -> [a] -> [(a, Trie [a] a)]
 {- TO BE WRITTEN -}
-edges domain currentNode = undefined
+edges domain currentNode =  map (\t-> (t, subtree domain t currentNode))  domain  
 
 -- How do we build the subtree?
 -- We use the label we just followed
@@ -204,8 +217,15 @@ edges domain currentNode = undefined
 -- (using the edges function)
 subtree :: [a] -> a -> [a] -> Trie [a] a
 {- TO BE WRITTEN -}
-subtree domain label parent =
-  undefined
+subtree domain label parent = 
+  Trie (aux parent label) (edges domain (aux parent label))
+  where aux p l = p ++ [l]
+
+-- >>> limitTrie 1 $ rootTrie ['a', 'b', 'c']
+-- Trie "" [('a',Trie "a" []),('b',Trie "b" []),('c',Trie "c" [])]
+
+-- >>> limitTrie 2 $ rootTrie ['a'..'b']
+-- Trie "" [('a',Trie "a" [('a',Trie "aa" []),('b',Trie "ab" [])]),('b',Trie "b" [('a',Trie "ba" []),('b',Trie "bb" [])])]
 
 -- Important: the trie is infinite because edges calls subtree, and subtree calls edges.
 
@@ -213,7 +233,7 @@ subtree domain label parent =
 -- provided with a domain (for the list elements)
 trieCache :: [e] -> ([e] -> b) -> Trie b e
 {- TO BE WRITTEN -}
-trieCache domain function = undefined
+trieCache domain function = mapTrie function (rootTrie domain) 
 
 {--
 You can inspect the cache with GHCI!
@@ -258,14 +278,29 @@ l2 = "functionalprogrammingrules"
 s1 = "bananrepubliksinvasionsarmestabsadjutant"
 s2 = "kontrabasfiolfodralmakarmästarlärling"
 
-openLPS :: (String -> String) -> (String -> String)
-openLPS s = undefined -- look at 'lps' for inspiration
+openLPS :: (String -> String) -> String -> String
+openLPS _ [] = ""
+openLPS _ [x] = [x]
+openLPS f xs 
+  | head xs == last xs = [head xs] ++ f (drop 1 (dropLast xs)) ++ [last xs]
+  | otherwise = maximumBy (comparing length) [f (dropLast xs),f (drop 1 xs)]
+
+
+
+
+swedishAlphabet :: String
+swedishAlphabet = ['a'..'z'] ++ "åäö"
+
+
+
 
 -- Fast!
 fastLPS :: String -> String
-fastLPS s =
-  undefined
+fastLPS s = trieLookup (trieCache swedishAlphabet (openLPS fastLPS)) s
 
 -- So, what were the tricks?
 -- The first one is to build an infinite data-structure, to memoize the function
 -- And then your function looks in the cache for the answer!
+
+-- >>> fastLPS l2
+-- "uniargrainu"

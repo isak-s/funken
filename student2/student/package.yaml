@@ -60,7 +60,7 @@ benchmarks:
     - -with-rtsopts=-N
     dependencies:
     - memoization
-    - criterion >= 1.6
+    - criterion >=  1.5 && < 1.6
 
 
 tests:

@@ -3,7 +3,21 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/topics/lock_files
 
-packages: []
+packages:
+- completed:
+    hackage: criterion-1.5.13.0@sha256:6d627a4c269981d3c94bff5aca7c377e838336faf666ac5a4447863bf1044727,5650
+    pantry-tree:
+      sha256: f9a190f3ad463782bb0237bcc97c1917687cf289f556989f2f1daf67eaa192b3
+      size: 2398
+  original:
+    hackage: criterion-1.5.13.0@sha256:6d627a4c269981d3c94bff5aca7c377e838336faf666ac5a4447863bf1044727,5650
+- completed:
+    hackage: criterion-measurement-0.1.4.0@sha256:a1e16321f63bb2de4eb9fe2ad9982479d0fed590be82ec0b99cfa082f4ed1821,2121
+    pantry-tree:
+      sha256: 082f5e4e034101031949eecc3dc37e25c4c99c0b3e4428cffec088dc58668ad6
+      size: 726
+  original:
+    hackage: criterion-measurement-0.1.4.0@sha256:a1e16321f63bb2de4eb9fe2ad9982479d0fed590be82ec0b99cfa082f4ed1821,2121
 snapshots:
 - completed:
     sha256: a81fb3877c4f9031e1325eb3935122e608d80715dc16b586eb11ddbff8671ecd
