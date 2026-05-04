@@ -76,7 +76,7 @@ listLookup cache value = fromJust ( lookup value cache)
 -- We use a 'fast fibonacci function' even if we haven't defined it yet!
 fibCache :: [(Int, Int)]
 {- TO BE WRITTEN -}
-fibCache = listCache [0..] fibo
+fibCache = listCache [0..] fastFibo2
 
 -- And the fast function looks in the cache!
 fastFibo2 :: Int -> Int
@@ -119,8 +119,9 @@ testMemoize n =
 -- And it's easy to implement fibonacci again: (openFib fibo) does that.
 openFib :: (Int -> Int) -> Int -> Int
 {- TO BE WRITTEN -}
-openFib f n = undefined
-
+openFib _ 0 = 0
+openFib _ 1 = 1
+openFib f n = f (n - 1) + f (n -2)
 -- We use openFib to create a cached function, and make sure
 -- The recursive calls call the fast version!
 fastFibo3 :: Int -> Int
@@ -138,7 +139,12 @@ dropLast l = take (length l - 1) l
 
 -- Slow version
 lps :: String -> String
-lps s = undefined
+lps [] = ""
+lps [x] = x
+lps xs = 
+  | head xs == last xs = head xs ++ (lps (droplast (drop 1 xs))) ++ last xs
+  | otherwise = maximumBy (comparing length) [lps (dropLast xs),lps ( drop 1 xs)]
+
 
 -- CACHES FOR LISTS OF THINGS
 
@@ -156,7 +162,8 @@ data Trie node edge = Trie node [(edge, Trie node edge)]
 -- First, looking for a list in a trie...
 trieLookup :: Eq e => Trie a e -> [e] -> a
 {- TO BE WRITTEN -}
-trieLookup t l = undefined
+trieLookup (Trie a e) [] = a  
+trieLookup Trie [x:xs] = trieLookup Trie xs 
 
 -- Get a subset of a trie, with limited depth
 -- (Provided: Useful for debugging)
