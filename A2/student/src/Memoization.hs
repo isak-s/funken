@@ -75,7 +75,7 @@ openFib _ 1 = 1
 openFib f n = f (n-1) + f (n-2)
 
 fastFibo3 :: Int -> Int
-fastFibo3 = memoizeWithList [0..] (openFib fastFibo3)
+fastFibo3 = memoizeWithList [0..] $ openFib fastFibo3
 
 -- LONGEST PALINDROMIC SUBSEQUENCE
 
@@ -151,17 +151,17 @@ mapTrie f (Trie v cs) = Trie (f v) (map (\(e, t) -> (e, mapTrie f t)) cs)
 -- Trie 2 [('h',Trie 3 [('i',Trie 4 []),('o',Trie 4 [('o',Trie 5 [])])])]
 
 rootTrie :: [a] -> Trie [a] a
-rootTrie domain = Trie [] (edges domain [])
+rootTrie domain = Trie [] $ edges domain []
 
 edges :: [a] -> [a] -> [(a, Trie [a] a)]
 edges domain currentNode = map (\e -> (e, subtree domain e currentNode)) domain
 
 subtree :: [a] -> a -> [a] -> Trie [a] a
-subtree domain label parent = Trie curr (edges domain curr)
+subtree domain label parent = Trie curr $ edges domain curr
   where curr = parent ++ [label]
 
 trieCache :: [e] -> ([e] -> b) -> Trie b e
-trieCache domain function = mapTrie function (rootTrie domain)
+trieCache domain function = mapTrie function $ rootTrie domain
 
 testTrie :: [Char] -> [Char]
 testTrie =
@@ -226,7 +226,7 @@ openLPS flps (x:xs)
     where
       dlxs = dropLast xs
       lx = last xs
-      r1 = flps (x:dlxs)
+      r1 = flps $ x:dlxs
       r2 = flps xs
 
 fastLPS :: String -> String
