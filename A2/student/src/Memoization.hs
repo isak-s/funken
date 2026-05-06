@@ -1,6 +1,8 @@
 module Memoization where
 
 import Data.Maybe (fromJust)
+import Data.List (maximumBy)
+import Data.Ord (comparing)
 
 fibo :: Int -> Int
 fibo 0 = 0
@@ -57,9 +59,6 @@ fastFibo2 n = listLookup fibCache (n-1) + listLookup fibCache (n-2)
 -- 6765
 -- (0.00 secs, 515,080 bytes)
 
-memoizeList :: Eq a => [a] -> (a -> b) -> (a -> b)
-memoizeList domain = listLookup.listCache domain
-
 memoizeWithList :: Eq a => [a] -> (a -> b) -> (a -> b)
 memoizeWithList domain = listLookup . listCache domain
 
@@ -100,8 +99,7 @@ lps [] = []
 lps [a] = [a]
 lps (x:xs)
   | x == lx = x : lps dlxs ++ [lx]
-  | length r1 > length r2 = r1
-  | otherwise = r2
+  | otherwise = maximumBy (comparing length) [r1, r2]
     where
       dlxs = dropLast xs
       lx = last xs
@@ -119,7 +117,7 @@ data Trie node edge = Trie node [(edge, Trie node edge)]
 trieLookup :: Eq e => Trie a e -> [e] -> a
 -- empty list at current node -> return node
 trieLookup (Trie a _) [] = a
-trieLookup (Trie _ e) l = trieLookup (fromJust (lookup (head l) e)) (tail l)
+trieLookup (Trie _ e) (x:xs) = trieLookup (fromJust (lookup x e)) xs
 
 -- get edges for a
 -- take the edge that matches the next item in the list
@@ -221,8 +219,7 @@ openLPS _ [] = []
 openLPS _ [a] = [a]
 openLPS flps (x:xs)
   | x == lx = x : flps dlxs ++ [lx]
-  | length r1 > length r2 = r1
-  | otherwise = r2
+  | otherwise = maximumBy (comparing length) [r1, r2]
     where
       dlxs = dropLast xs
       lx = last xs
