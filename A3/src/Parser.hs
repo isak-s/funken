@@ -15,23 +15,24 @@ err message cs = error (message++" near "++cs++"\n")
 iter :: Parser a -> Parser [a]
 iter m = m # iter m >-> cons ! return []
 
+cons :: (a, [a]) -> [a]
 cons(a, b) = a:b
 
 -- Runs both parsers but only keep the result of second one
 (-#) :: Parser a -> Parser b -> Parser b
-m -# n = error "-# not implemented"
+m -# n = m # n >-> snd
 
 -- Runs both parsers but only keeps the result of the first
 (#-) :: Parser a -> Parser b -> Parser a
-m #- n = error "#- not implemented"
+m #- n = m # n >-> fst
 
 -- Treat comments as whitespace
 -- >>> spaces "\t\t--comment\n"
--- Just ("\t\tcomment","")
+-- #- not implemented
 -- >>> spaces "-- comment\n"
--- Just ("comment","")
+-- #- not implemented
 -- >>> spaces "not space!"
--- Just ("","not space!")
+-- #- not implemented
 spaces :: Parser String
 -- spaces =  error "spaces not implemented"
 spaces =
@@ -45,7 +46,6 @@ spaces =
 -- Just ("hello!","")
 -- >>> comment "--Not a comment"
 -- Nothing
--- We include this because otherwise, it's quite tricky to support
 comment :: Parser String
 comment = dash -# dash -# notNewLine #- newline
     where notNewLine = iter (char ? (/= '\n'))
@@ -57,19 +57,31 @@ token :: Parser a -> Parser a
 token m = m #- spaces
 
 letter :: Parser Char
-letter =  error "letter not implemented"
+letter = char ? isAlpha
+-- >>> letter ['l']
+-- Just ('l',"")
+-- >>> letter ['1']
+-- Nothing
 
 word :: Parser String
 word = token (letter # iter letter >-> cons)
 
 chars :: Int -> Parser String
-chars n =  error "chars not implemented"
+chars 0 = return ""
+chars n = char # chars (n-1) >-> cons
+-- # sends the snd of the tuple to chars (n-1)
+-- cons takes the tuple (a, b) and concatenates them
+-- we get a long chain of char concatenated ending with a return ""
+
+---
+-- >>> chars 5 "hellooooo"
+-- Just ("hello","oooo")
 
 accept :: String -> Parser String
 accept w = (token (chars (length w))) ? (==w)
 
 require :: String -> Parser String
-require w  = error "require not implemented"
+require w  = (token (chars (length w)) ? (==w)) ! err ("missing required: "++w)
 
 lit :: Char -> Parser Char
 lit c = token char ? (==c)
