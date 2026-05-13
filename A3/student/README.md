@@ -118,21 +118,22 @@ the expression `Program.exec p [3,16]` should obviously return
     of type `Maybe (a, String)`. This means e.g. that the words `Just`
     and `Nothing` may not appear in your code.
 
+    `spaces :: Parser String.`:
+        Here, we provide an example implementation.
+       `spaces` accepts any number of whitespace characters as defined
+        by the Prelude function `isSpace`. `spaces` treats comments as
+        whitespace.
+
     `letter :: Parser Char.`:
     `letter` is a parser for a letter as defined by the Prelude
         function `isAlpha`.
-
-    `spaces :: Parser String.`:
-       `spaces` accepts any number of whitespace characters as defined
-        by the Prelude function `isSpace`. Consider treating comments as
-        whitespace.
 
     `chars :: Int -> Parser String.`:
        The parser `chars n` accepts `n` characters.
 
     `require :: String -> Parser String.`:
        The parser `require w` accepts the same string input as
-        `accept w` but reports the missing string using `err` in case of
+        `accept w` but returns Nothing using `fail` in case of
         failure.
 
     `-# :: Parser a -> Parser b -> Parser b.`:
@@ -206,14 +207,17 @@ the expression `Program.exec p [3,16]` should obviously return
     to define the parse function in this module. Use the `exec` function
     in the `Statement` module to execute a program.
 
-6.  Implement `toString :: T -> String` in `Statement` and `Program`. A
-    newline character should be inserted after each statement and some
-    keywords. Use indentation (as in the example code above). No
-    spurious empty lines should appear in the output.
-
+6.  Implement `toString :: T -> String` in `Statement` and `Program`.
     Please note that the output of your `toString` should be a legal
     program, i.e. should be parsable and executable again. The comments
     may be omitted, of course.
+
+    (OPTIONAL):
+    Printing a program on one line works, but it's not very readable.
+    You may implement pretty printing of programs.
+    A newline character should be inserted after each statement and some keywords.
+    Use indentation (as in the example code above). No
+    spurious empty lines should appear in the output.
 
 7.  Extend the datatype `Expr` defined in `Expr.hs` with exponentiation,
     so that your expressions would allow e.g. a\^2 or 2\^a as legal

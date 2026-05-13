@@ -98,7 +98,7 @@ s9 :: String
 s9 = "while n do begin fac:=fac*n; n:=n-1; end"
 p9 = fromString s9
 testp9 = TestLabel "execute p9" $ execute [p9] env stdin ~?= []
-    where env = Dictionary.insert ("n", 3) Dictionary.empty
+    where env = foldr Dictionary.insert Dictionary.empty [("n", 3), ("fac", 1)]
           stdin = []
 
 p10 = fromString  "begin read x ; x := x + 1 ; write x; end"
