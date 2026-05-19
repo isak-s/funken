@@ -105,6 +105,6 @@ value (Div e1 e2) e = do
 value (Pow e1 e2) e = (^) <$> value e1 e <*> value e2 e
 
 
-instance Parse Expr where
+instance Parse Expr where       
     parse = expr
     toString = shw 0
